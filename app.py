@@ -26,7 +26,7 @@ except Exception as e:
 # --- Aplikasi Hanya Jalan Jika Google Sheet Siap ---
 if worksheet is not None:
     # Judul & Penjelasan
-    st.title("🎯 yEksperimen Estimasi Rata-rata Y Berdasarkan Bentuk")
+    st.title("🎯 Eksperimen Estimasi Rata-rata Y Berdasarkan Bentuk")
     st.info("""
     **Instruksi:** Lihat grafik scatterplot di bawah ini. Tiap kategori direpresentasikan oleh bentuk dan warna yang berbeda.
     
