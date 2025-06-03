@@ -9,6 +9,11 @@ from datetime import datetime
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = Credentials.from_service_account_info(st.secrets["google_sheets"], scopes=scope)
 client = gspread.authorize(creds)
+try:
+    spreadsheet = client.open_by_key("1aZ0LjvdZs1WHGphqb_nYrvPma8xEG9mxfM-O1_fsi3g")
+    st.write("Berhasil membuka spreadsheet:", spreadsheet.title)
+except Exception as e:
+    st.error(f"Gagal membuka spreadsheet: {e}")
 
 # Ganti dengan SPREADSHEET_ID Anda
 spreadsheet = client.open_by_key("1aZ0LjvdZs1WHGphqb_nYrvPma8xEG9mxfM-O1_fsi3g")
