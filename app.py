@@ -27,7 +27,7 @@ except Exception as e:
 if worksheet is not None:
     st.title("\U0001F3AF Eksperimen Estimasi Rata-rata Y Berdasarkan Bentuk")
     st.info("""
-    **Instruksi:** Lihat pgrafik scatterplot di bawah ini. Tiap kategori direpresentasikan oleh bentuk dan warna yang berbeda.
+    **Instruksi:** Lihat grafik scatterplot di bawah ini. Tiap kategori direpresentasikan oleh bentuk dan warna yang berbeda.
 
     Tugas Anda: Pilih kategori (berdasarkan bentuk) yang memiliki **rata-rata nilai Y tertinggi**.
 
