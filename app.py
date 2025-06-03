@@ -45,7 +45,7 @@ def get_correct_answer(data):
 
 # --- Streamlit App ---
 def main():
-    st.title("Eksperimen HCI: Estimasi Rata-rata Y")
+    st.title("WEksperimen HCI: Estimasi Rata-rata Y")
     
     # Initialize session state
     if 'submitted' not in st.session_state:
