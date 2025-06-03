@@ -1,59 +1,58 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
-from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
+from datetime import datetime
 
-def kirim_ke_sheets(data_dict):
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds_dict = st.write(st.secrets["google_sheets"])
-    creds = Credentials.from_service_account_info(dict(creds_dict), scopes=scope)
-    
-    client = gspread.authorize(creds)
-    sheet = client.open_by_key("1aZ0LjvdZs1WHGphqb_nYrvPma8xEG9mxfM-O1_fsi3g").sheet1
-    sheet.append_row([str(data_dict[k]) for k in data_dict])
+# Inisialisasi Google Sheets
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = Credentials.from_service_account_file("credentials.json", scopes=scope)
+client = gspread.authorize(creds)
 
-# Aplikasi Streamlit
-st.title("Eksperimen HCI: Estimasi Rata-rata Y")
+# Ganti dengan SPREADSHEET_ID Anda
+spreadsheet = client.open_by_key("1aZ0LjvdZs1WHGphqb_nYrvPma8xEG9mxfM-O1_fsi3g")
+worksheet = spreadsheet.sheet1  # Gunakan sheet pertama
 
-num_categories = st.slider("Jumlah Kategori", 2, 10, 4)
-markers = ['o', 's', '^', 'v', '>', '<', 'D', 'p', '*', 'h']
-selected_markers = markers[:num_categories]
+# Judul aplikasi
+st.title("Eksperimen HCI: Estimasi Rata-rata")
 
-np.random.seed(42)
-means = []
-options = []
+# Input jumlah kategori
+n_categories = st.slider("Jumlah Kategori", min_value=2, max_value=10, value=5, step=1)
 
+# Daftar bentuk
+shapes = [
+    ('^', 'full'), ('o', 'none'), ('s', 'full'), ('*', 'none'), ('v', 'full'),
+    ('<', 'none'), ('>', 'full'), ('p', 'none'), ('h', 'full'), ('D', 'none')
+]
+
+# Simulasi data dan buat scatterplot
 fig, ax = plt.subplots()
-for i in range(num_categories):
-    x = np.random.rand(20)
-    y = np.random.normal(loc=0.2*i + 0.1, scale=0.05, size=20)
-    ax.scatter(x, y, marker=selected_markers[i], label=f'Kategori {i+1}')
-    means.append(np.mean(y))
-    options.append(f'Kategori {i+1}')
+colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'brown']
+for i in range(n_categories):
+    x = np.random.uniform(0, 1.5, 15)
+    y = np.random.uniform(0, 1.5, 15)
+    marker, fill = shapes[i]
+    ax.scatter(x, y, marker=marker, fillstyle=fill, s=80, c=colors[i], label=f'Kategori {i+1}', alpha=0.7)
 
+ax.axhline(y=0.75, color='r', linestyle='--')
+ax.set_xlim(-0.1, 1.6)
+ax.set_ylim(-0.1, 1.6)
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
 ax.legend()
 st.pyplot(fig)
 
-guess = st.radio("Pilih kategori dengan rata-rata Y tertinggi:", options)
+# Tugas pengguna: Pilih rata-rata tertinggi
+st.write("Pilih kategori dengan rata-rata Y tertinggi:")
+selected_category = st.selectbox("Kategori", [f"Kategori {i+1}" for i in range(n_categories)])
 
+# Tombol untuk submit respons
 if st.button("Submit"):
-    correct_idx = np.argmax(means)
-    correct = options[correct_idx]
-    is_correct = guess == correct
-    st.success("Benar!" if is_correct else f"Salah. Jawaban benar: " + correct)
+    # Catat timestamp dan data
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    response_data = [timestamp, n_categories, selected_category]
 
-    log = {
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "jumlah_kategori": num_categories,
-        "jawaban_user": guess,
-        "jawaban_benar": correct,
-        "benar": is_correct
-    }
-
-    try:
-        kirim_ke_sheets(log)
-        st.info("✅ Data berhasil dikirim ke Google Sheets.")
-    except Exception as e:
-        st.error(f"❌ Gagal mengirim ke Sheets: {e}")
+    # Tambahkan data ke Google Sheets
+    worksheet.append_row(response_data)
+    st.success(f"Respons disimpan: {selected_category}")
