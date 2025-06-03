@@ -37,6 +37,9 @@ if worksheet is not None:
     # Pilihan jumlah kategori
     n_categories = st.slider("🔢 Jumlah Kategori", min_value=2, max_value=10, value=5, step=1)
 
+    # Pilihan tampilan bentuk: filled atau unfilled
+    fill_style = st.radio("🎨 Tipe Tampilan Bentuk:", ["Filled", "Unfilled (hollow)"])
+
     # --- Generate data hanya jika jumlah kategori berubah ---
     if "data_initialized" not in st.session_state or st.session_state.n_categories != n_categories:
         st.session_state.n_categories = n_categories
@@ -57,15 +60,25 @@ if worksheet is not None:
 
     fig, ax = plt.subplots()
     for i in range(n_categories):
+        marker = markers[i % len(markers)]
+        color = colors[i % len(colors)]
+
+        if fill_style == "Unfilled (hollow)":
+            facecolor = 'none'
+            edgecolor = color
+        else:
+            facecolor = color
+            edgecolor = 'k'
+
         ax.scatter(
             st.session_state.x_data[i],
             st.session_state.y_data[i],
-            marker=markers[i % len(markers)],
+            marker=marker,
             s=80,
-            c=colors[i % len(colors)],
+            facecolors=facecolor,
+            edgecolors=edgecolor,
             label=f'Kategori {i+1}',
-            alpha=0.75,
-            edgecolors='k'
+            alpha=0.8
         )
 
     ax.set_xlim(-0.1, 1.6)
@@ -92,7 +105,8 @@ if worksheet is not None:
             selected_category,
             "Benar" if is_correct else "Salah",
             f"Kategori {true_highest_category}",
-            ", ".join([f"{m:.3f}" for m in y_means])
+            ", ".join([f"{m:.3f}" for m in y_means]),
+            fill_style  # tambahan: simpan gaya bentuk yang dipilih user
         ]
 
         try:
