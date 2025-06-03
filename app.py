@@ -34,9 +34,10 @@ if worksheet is not None:
     Anda **tidak perlu menghitung**. Cukup amati titik-titiknya dan tebak berdasarkan **persepsi visual** Anda.
     """)
 
-    # Pilihan jumlah kategori dan gaya bentuk
-    n_categories = st.slider("\U0001F522 Jumlah Kategori", min_value=2, max_value=10, value=5, step=1)
+    # Pilihan tampilan bentuk: filled, unfilled, open
     fill_style = st.radio("\U0001F3A8 Tipe Tampilan Bentuk:", ["Filled", "Unfilled (hollow)", "Open"])
+    max_cat = 7 if fill_style == "Open" else 10
+    n_categories = st.slider("\U0001F522 Jumlah Kategori", min_value=2, max_value=max_cat, value=min(5, max_cat), step=1)
 
     # --- Generate data hanya jika jumlah kategori berubah ---
     if "data_initialized" not in st.session_state or st.session_state.n_categories != n_categories:
@@ -53,26 +54,32 @@ if worksheet is not None:
         st.session_state.data_initialized = True
 
     # --- Visualisasi scatterplot ---
-    markers = ['^', 'o', 's', '*', 'v', '<', '>', 'p', 'h', 'D']
+    filled_markers = ['o', 's', '^', 'D', '*', 'H', 'P', 'v', 'p', 'X']
+    open_markers = ['-', '|', '+', 'x', '*', '1', '2']
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'brown']
+
+    markers_used = open_markers[:n_categories] if fill_style == "Open" else filled_markers[:n_categories]
 
     fig, ax = plt.subplots()
     for i in range(n_categories):
-        marker = markers[i % len(markers)]
+        marker = markers_used[i]
         color = colors[i % len(colors)]
 
         if fill_style == "Filled":
             facecolor = color
             edgecolor = 'k'
             alpha = 0.8
+            linewidth = 1.0
         elif fill_style == "Unfilled (hollow)":
             facecolor = 'none'
             edgecolor = color
             alpha = 0.9
+            linewidth = 1.2
         elif fill_style == "Open":
             facecolor = 'none'
-            edgecolor = color
-            alpha = 0.3
+            edgecolor = 'black'
+            alpha = 1.0
+            linewidth = 1.0
 
         ax.scatter(
             st.session_state.x_data[i],
@@ -81,6 +88,7 @@ if worksheet is not None:
             s=80,
             facecolors=facecolor,
             edgecolors=edgecolor,
+            linewidths=linewidth,
             label=f'Kategori {i+1}',
             alpha=alpha
         )
@@ -127,3 +135,4 @@ if worksheet is not None:
                 st.write(f"Kategori {i+1}: {mean:.3f}")
 else:
     st.error("Aplikasi tidak dapat melanjutkan karena gagal mengakses Google Sheets.")
+
