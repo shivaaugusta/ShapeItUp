@@ -55,7 +55,7 @@ if worksheet is not None:
 
     # --- Visualisasi scatterplot ---
     filled_markers = ['o', 's', '^', 'D', '*', 'H', 'P', 'v', 'p', 'X']
-    open_markers = ['-', '|', '+', 'x', '*', '1', '2']
+    open_markers = ['+', 'x', '*', 'X', 'P', 'H', 'v']
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'brown']
 
     markers_used = open_markers[:n_categories] if fill_style == "Open" else filled_markers[:n_categories]
@@ -135,4 +135,5 @@ if worksheet is not None:
                 st.write(f"Kategori {i+1}: {mean:.3f}")
 else:
     st.error("Aplikasi tidak dapat melanjutkan karena gagal mengakses Google Sheets.")
+
 
