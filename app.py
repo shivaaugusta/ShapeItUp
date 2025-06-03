@@ -54,33 +54,41 @@ if worksheet is not None:
 
         st.session_state.data_initialized = True
 
-    # --- Visualisasi scatterplot ---
-    markers = ['^', 'o', 's', '*', 'v', '<', '>', 'p', 'h', 'D']
-    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'brown']
+    # Pilihan tampilan bentuk: filled, unfilled, open
+fill_style = st.radio("🎨 Tipe Tampilan Bentuk:", ["Filled", "Unfilled (hollow)", "Open"])
 
-    fig, ax = plt.subplots()
-    for i in range(n_categories):
-        marker = markers[i % len(markers)]
-        color = colors[i % len(colors)]
+# --- Visualisasi scatterplot ---
+markers = ['^', 'o', 's', '*', 'v', '<', '>', 'p', 'h', 'D']
+colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'brown']
 
-        if fill_style == "Unfilled (hollow)":
-            facecolor = 'none'
-            edgecolor = color
-        else:
-            facecolor = color
-            edgecolor = 'k'
+fig, ax = plt.subplots()
+for i in range(n_categories):
+    marker = markers[i % len(markers)]
+    color = colors[i % len(colors)]
 
-        ax.scatter(
-            st.session_state.x_data[i],
-            st.session_state.y_data[i],
-            marker=marker,
-            s=80,
-            facecolors=facecolor,
-            edgecolors=edgecolor,
-            label=f'Kategori {i+1}',
-            alpha=0.8
-        )
+    if fill_style == "Filled":
+        facecolor = color
+        edgecolor = 'k'
+        alpha = 0.8
+    elif fill_style == "Unfilled (hollow)":
+        facecolor = 'none'
+        edgecolor = color
+        alpha = 0.9
+    elif fill_style == "Open":
+        facecolor = 'none'
+        edgecolor = color
+        alpha = 0.3  # lebih transparan dari unfilled biasa
 
+    ax.scatter(
+        st.session_state.x_data[i],
+        st.session_state.y_data[i],
+        marker=marker,
+        s=80,
+        facecolors=facecolor,
+        edgecolors=edgecolor,
+        label=f'Kategori {i+1}',
+        alpha=alpha
+    )
     ax.set_xlim(-0.1, 1.6)
     ax.set_ylim(-0.1, 1.6)
     ax.set_xlabel('X')
@@ -106,7 +114,7 @@ if worksheet is not None:
             "Benar" if is_correct else "Salah",
             f"Kategori {true_highest_category}",
             ", ".join([f"{m:.3f}" for m in y_means]),
-            fill_style  # tambahan: simpan gaya bentuk yang dipilih user
+            fill_style 
         ]
 
         try:
