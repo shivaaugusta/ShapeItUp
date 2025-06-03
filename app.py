@@ -23,62 +23,82 @@ except PermissionError as e:
 except Exception as e:
     st.error(f"Error lain: {e}")
 
-# Lanjutkan aplikasi hanya jika worksheet tersedia
+# --- Aplikasi Hanya Jalan Jika Google Sheet Siap ---
 if worksheet is not None:
-    st.title("Eksperimen HCI: Estimasi Rata-rata")
-    n_categories = st.slider("Jumlah Kategori", min_value=2, max_value=10, value=5, step=1)
-
-    markers = ['^', 'o', 's', '*', 'v', '<', '>', 'p', 'h', 'D']
-    fig, ax = plt.subplots()
-    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'brown']
+    # Judul & Penjelasan
+    st.title("🎯 Eksperimen Estimasi Rata-rata Y Berdasarkan Bentuk")
+    st.info("""
+    **Instruksi:** Lihat grafik scatterplot di bawah ini. Tiap kategori direpresentasikan oleh bentuk dan warna yang berbeda.
     
-    # Simpan data Y untuk menghitung rata-rata
+    Tugas Anda: Pilih kategori (berdasarkan bentuk) yang memiliki **rata-rata nilai Y tertinggi**. 
+    
+    Anda **tidak perlu menghitung**. Cukup amati titik-titiknya dan tebak berdasarkan **persepsi visual** Anda.
+    """)
+
+    # Slider jumlah kategori
+    n_categories = st.slider("🔢 Jumlah Kategori", min_value=2, max_value=10, value=5, step=1)
+
+    # Persiapan bentuk & warna
+    markers = ['^', 'o', 's', '*', 'v', '<', '>', 'p', 'h', 'D']
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'brown']
+
+    fig, ax = plt.subplots()
     y_data_per_category = []
+
     for i in range(n_categories):
         x = np.random.uniform(0, 1.5, 15)
         y = np.random.uniform(0, 1.5, 15)
-        y_data_per_category.append(y)  # Simpan data Y untuk perhitungan
-        marker = markers[i % len(markers)]
-        ax.scatter(x, y, marker=marker, s=80, c=colors[i % len(colors)], label=f'Kategori {i+1}', alpha=0.7)
+        y_data_per_category.append(y)
+        ax.scatter(
+            x, y,
+            marker=markers[i % len(markers)],
+            s=80,
+            c=colors[i % len(colors)],
+            label=f'Kategori {i+1}',
+            alpha=0.75,
+            edgecolors='k'
+        )
 
-    ax.axhline(y=0.75, color='r', linestyle='--')
     ax.set_xlim(-0.1, 1.6)
     ax.set_ylim(-0.1, 1.6)
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.legend()
+    ax.grid(True)
     st.pyplot(fig)
 
-    # Hitung rata-rata Y untuk setiap kategori
+    # Hitung rata-rata Y tiap kategori
     y_means = [np.mean(y) for y in y_data_per_category]
-    # Tentukan kategori dengan rata-rata Y tertinggi (indeks dimulai dari 0, jadi tambah 1)
-    true_highest_category = np.argmax(y_means) + 1
+    true_highest_category = np.argmax(y_means) + 1  # +1 karena label dimulai dari 1
 
-    # Debugging: Tampilkan rata-rata Y untuk verifikasi
-    st.write("Rata-rata Y per kategori:", [f"Kategori {i+1}: {mean:.3f}" for i, mean in enumerate(y_means)])
-    st.write(f"Kategori dengan rata-rata Y tertinggi (sebenarnya): Kategori {true_highest_category}")
+    # Pilihan user
+    selected_category = st.selectbox("📌 Pilih kategori dengan rata-rata Y tertinggi:", [f"Kategori {i+1}" for i in range(n_categories)])
 
-    st.write("Pilih kategori dengan rata-rata Y tertinggi:")
-    selected_category = st.selectbox("Kategori", [f"Kategori {i+1}" for i in range(n_categories)])
+    if st.button("🚀 Submit Jawaban"):
+        selected_category_idx = int(selected_category.split(" ")[1])
+        is_correct = (selected_category_idx == true_highest_category)
 
-    if st.button("Submit"):
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        response_data = [
+            timestamp,
+            n_categories,
+            selected_category,
+            "Benar" if is_correct else "Salah",
+            f"Kategori {true_highest_category}",
+            ", ".join([f"{m:.3f}" for m in y_means])
+        ]
+
         try:
-            # Ambil indeks kategori yang dipilih (misalnya, "Kategori 4" -> 4)
-            selected_category_idx = int(selected_category.split(" ")[1])
-            # Tentukan apakah pilihan pengguna benar
-            is_correct = (selected_category_idx == true_highest_category)
-            
-            # Simpan data ke Google Sheets, termasuk apakah pilihan benar atau salah
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            response_data = [timestamp, n_categories, selected_category, "Benar" if is_correct else "Salah"]
             worksheet.append_row(response_data)
-            
-            # Beri feedback ke pengguna
             if is_correct:
-                st.success(f"Respons disimpan: {selected_category}. Pilihan Anda benar!")
+                st.success(f"✅ Jawaban Anda benar! Kategori {true_highest_category} memiliki rata-rata Y tertinggi.")
             else:
-                st.error(f"Respons disimpan: {selected_category}. Pilihan Anda salah. Kategori dengan rata-rata Y tertinggi adalah Kategori {true_highest_category}.")
+                st.error(f"❌ Jawaban Anda salah. Rata-rata Y tertinggi ada di **Kategori {true_highest_category}**.")
         except Exception as e:
-            st.error(f"Gagal menyimpan: {e}")
+            st.error(f"Gagal menyimpan ke Google Sheets: {e}")
+
+        with st.expander("🔍 Rata-rata Y untuk masing-masing kategori"):
+            for i, mean in enumerate(y_means):
+                st.write(f"Kategori {i+1}: {mean:.3f}")
 else:
-    st.error("Aplikasi tidak dapat melanjutkan karena gagal mengakses worksheet.")
+    st.error("Aplikasi tidak dapat melanjutkan karena gagal mengakses Google Sheets.")
