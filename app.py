@@ -77,7 +77,7 @@ if worksheet is not None:
             linewidth = 1.2
         elif fill_style == "Open":
             facecolor = 'none'
-            edgecolor = 'black'
+            edgecolor = color
             alpha = 1.0
             linewidth = 1.0
 
