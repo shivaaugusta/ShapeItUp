@@ -5,17 +5,13 @@ from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 
-# Setup koneksi Google Sheets
-def get_credentials_from_secrets():
-    creds_dict = st.secrets["google_sheets"]
-    creds = Credentials.from_service_account_info(dict(creds_dict))
-    return creds
-
 def kirim_ke_sheets(data_dict):
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = get_credentials_from_secrets()
+    creds_dict = st.write(st.secrets["google_sheets"])
+    creds = Credentials.from_service_account_info(dict(creds_dict), scopes=scope)
+    
     client = gspread.authorize(creds)
-    sheet = client.open_by_key("1aZoLJydZs1WHGphqb_nYrwPma8xEG9mxfM-O1_f5i3g").sheet1
+    sheet = client.open_by_key("1aZ0LjvdZs1WHGphqb_nYrvPma8xEG9mxfM-O1_fsi3g").sheet1
     sheet.append_row([str(data_dict[k]) for k in data_dict])
 
 # Aplikasi Streamlit
