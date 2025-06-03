@@ -23,34 +23,43 @@ except PermissionError as e:
 except Exception as e:
     st.error(f"Error lain: {e}")
 
-# --- Aplikasi Hanya Jalan Jika Google Sheet Siap ---
+# --- Aplikasi Hanya Jalan Jika Spreadsheet Aktif ---
 if worksheet is not None:
-    # Judul & Penjelasan
     st.title("🎯 Eksperimen Estimasi Rata-rata Y Berdasarkan Bentuk")
     st.info("""
     **Instruksi:** Lihat grafik scatterplot di bawah ini. Tiap kategori direpresentasikan oleh bentuk dan warna yang berbeda.
-    
-    Tugas Anda: Pilih kategori (berdasarkan bentuk) yang memiliki **rata-rata nilai Y tertinggi**. 
-    
+
+    Tugas Anda: Pilih kategori (berdasarkan bentuk) yang memiliki **rata-rata nilai Y tertinggi**.
+
     Anda **tidak perlu menghitung**. Cukup amati titik-titiknya dan tebak berdasarkan **persepsi visual** Anda.
     """)
 
-    # Slider jumlah kategori
+    # Pilihan jumlah kategori
     n_categories = st.slider("🔢 Jumlah Kategori", min_value=2, max_value=10, value=5, step=1)
 
-    # Persiapan bentuk & warna
+    # --- Generate data hanya jika jumlah kategori berubah ---
+    if "data_initialized" not in st.session_state or st.session_state.n_categories != n_categories:
+        st.session_state.n_categories = n_categories
+        st.session_state.x_data = []
+        st.session_state.y_data = []
+
+        for _ in range(n_categories):
+            x = np.random.uniform(0, 1.5, 15)
+            y = np.random.uniform(0, 1.5, 15)
+            st.session_state.x_data.append(x)
+            st.session_state.y_data.append(y)
+
+        st.session_state.data_initialized = True
+
+    # --- Visualisasi scatterplot ---
     markers = ['^', 'o', 's', '*', 'v', '<', '>', 'p', 'h', 'D']
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'brown']
 
     fig, ax = plt.subplots()
-    y_data_per_category = []
-
     for i in range(n_categories):
-        x = np.random.uniform(0, 1.5, 15)
-        y = np.random.uniform(0, 1.5, 15)
-        y_data_per_category.append(y)
         ax.scatter(
-            x, y,
+            st.session_state.x_data[i],
+            st.session_state.y_data[i],
             marker=markers[i % len(markers)],
             s=80,
             c=colors[i % len(colors)],
@@ -67,14 +76,12 @@ if worksheet is not None:
     ax.grid(True)
     st.pyplot(fig)
 
-    # Hitung rata-rata Y tiap kategori
-    y_means = [np.mean(y) for y in y_data_per_category]
-    true_highest_category = np.argmax(y_means) + 1  # +1 karena label dimulai dari 1
-
-    # Pilihan user
+    # --- Proses Pemilihan dan Evaluasi ---
     selected_category = st.selectbox("📌 Pilih kategori dengan rata-rata Y tertinggi:", [f"Kategori {i+1}" for i in range(n_categories)])
 
     if st.button("🚀 Submit Jawaban"):
+        y_means = [np.mean(y) for y in st.session_state.y_data]
+        true_highest_category = np.argmax(y_means) + 1
         selected_category_idx = int(selected_category.split(" ")[1])
         is_correct = (selected_category_idx == true_highest_category)
 
