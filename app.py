@@ -55,43 +55,67 @@ if worksheet is not None:
 
     # --- Visualisasi scatterplot ---
     filled_markers = ['o', 's', '^', 'D', '*', 'H', 'P', 'v', 'p', 'X']
-    open_markers = ['+', 'x', '*', 'X', 'P', 'H', 'v']
+    open_shapes = ['T', '-', '+', 'X', '*', '|', 'cross']  # representasi custom
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'brown']
 
-    markers_used = open_markers[:n_categories] if fill_style == "Open" else filled_markers[:n_categories]
+    markers_used = filled_markers[:n_categories]
 
     fig, ax = plt.subplots()
     for i in range(n_categories):
-        marker = markers_used[i]
+        x_vals = st.session_state.x_data[i]
+        y_vals = st.session_state.y_data[i]
         color = colors[i % len(colors)]
 
-        if fill_style == "Filled":
-            facecolor = color
-            edgecolor = 'k'
-            alpha = 0.8
-            linewidth = 1.0
-        elif fill_style == "Unfilled (hollow)":
-            facecolor = 'none'
-            edgecolor = color
-            alpha = 0.9
-            linewidth = 1.2
-        elif fill_style == "Open":
-            facecolor = 'none'
-            edgecolor = color
-            alpha = 1.0
-            linewidth = 1.0
+        if fill_style == "Open":
+            shape_type = open_shapes[i % len(open_shapes)]
+            for x, y in zip(x_vals, y_vals):
+                size = 0.04
+                lw = 1.2
+                if shape_type == 'T':
+                    ax.plot([x, x], [y - size, y + size], color='black', lw=lw)
+                    ax.plot([x - size, x + size], [y + size, y + size], color='black', lw=lw)
+                elif shape_type == '-':
+                    ax.plot([x - size, x + size], [y, y], color='black', lw=lw)
+                elif shape_type == '+':
+                    ax.plot([x - size, x + size], [y, y], color='black', lw=lw)
+                    ax.plot([x, x], [y - size, y + size], color='black', lw=lw)
+                elif shape_type == 'X':
+                    ax.plot([x - size, x + size], [y - size, y + size], color='black', lw=lw)
+                    ax.plot([x - size, x + size], [y + size, y - size], color='black', lw=lw)
+                elif shape_type == '*':
+                    ax.plot([x - size, x + size], [y, y], color='black', lw=lw)
+                    ax.plot([x, x], [y - size, y + size], color='black', lw=lw)
+                    ax.plot([x - size, x + size], [y - size, y + size], color='black', lw=lw)
+                    ax.plot([x - size, x + size], [y + size, y - size], color='black', lw=lw)
+                elif shape_type == '|':
+                    ax.plot([x, x], [y - size, y + size], color='black', lw=lw)
+                elif shape_type == 'cross':
+                    ax.plot([x - size, x + size], [y - size, y + size], color='black', lw=lw)
+                    ax.plot([x - size, x + size], [y + size, y - size], color='black', lw=lw)
+        else:
+            marker = markers_used[i % len(markers_used)]
+            if fill_style == "Filled":
+                facecolor = color
+                edgecolor = 'k'
+                alpha = 0.8
+                linewidth = 1.0
+            elif fill_style == "Unfilled (hollow)":
+                facecolor = 'none'
+                edgecolor = color
+                alpha = 0.9
+                linewidth = 1.2
 
-        ax.scatter(
-            st.session_state.x_data[i],
-            st.session_state.y_data[i],
-            marker=marker,
-            s=80,
-            facecolors=facecolor,
-            edgecolors=edgecolor,
-            linewidths=linewidth,
-            label=f'Kategori {i+1}',
-            alpha=alpha
-        )
+            ax.scatter(
+                x_vals,
+                y_vals,
+                marker=marker,
+                s=80,
+                facecolors=facecolor,
+                edgecolors=edgecolor,
+                linewidths=linewidth,
+                label=f'Kategori {i+1}',
+                alpha=alpha
+            )
 
     ax.set_xlim(-0.1, 1.6)
     ax.set_ylim(-0.1, 1.6)
@@ -135,5 +159,6 @@ if worksheet is not None:
                 st.write(f"Kategori {i+1}: {mean:.3f}")
 else:
     st.error("Aplikasi tidak dapat melanjutkan karena gagal mengakses Google Sheets.")
+
 
 
