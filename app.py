@@ -25,7 +25,7 @@ except Exception as e:
 
 # --- Aplikasi Hanya Jalan Jika Spreadsheet Aktif ---
 if worksheet is not None:
-    st.title("\U0001F3AF Eksperimen Estimasi Rata-rata Y Berdasarkan Bentuk")
+    st.title("\U0001F3AF vEksperimen Estimasi Rata-rata Y Berdasarkan Bentuk")
     st.info("""
     **Instruksi:** Lihat grafik scatterplot di bawah ini. Tiap kategori direpresentasikan oleh bentuk dan warna yang berbeda.
 
