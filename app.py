@@ -31,9 +31,13 @@ if worksheet is not None:
     markers = ['^', 'o', 's', '*', 'v', '<', '>', 'p', 'h', 'D']
     fig, ax = plt.subplots()
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'brown']
+    
+    # Simpan data Y untuk menghitung rata-rata
+    y_data_per_category = []
     for i in range(n_categories):
         x = np.random.uniform(0, 1.5, 15)
         y = np.random.uniform(0, 1.5, 15)
+        y_data_per_category.append(y)  # Simpan data Y untuk perhitungan
         marker = markers[i % len(markers)]
         ax.scatter(x, y, marker=marker, s=80, c=colors[i % len(colors)], label=f'Kategori {i+1}', alpha=0.7)
 
@@ -45,15 +49,35 @@ if worksheet is not None:
     ax.legend()
     st.pyplot(fig)
 
+    # Hitung rata-rata Y untuk setiap kategori
+    y_means = [np.mean(y) for y in y_data_per_category]
+    # Tentukan kategori dengan rata-rata Y tertinggi (indeks dimulai dari 0, jadi tambah 1)
+    true_highest_category = np.argmax(y_means) + 1
+
+    # Debugging: Tampilkan rata-rata Y untuk verifikasi
+    st.write("Rata-rata Y per kategori:", [f"Kategori {i+1}: {mean:.3f}" for i, mean in enumerate(y_means)])
+    st.write(f"Kategori dengan rata-rata Y tertinggi (sebenarnya): Kategori {true_highest_category}")
+
     st.write("Pilih kategori dengan rata-rata Y tertinggi:")
     selected_category = st.selectbox("Kategori", [f"Kategori {i+1}" for i in range(n_categories)])
 
     if st.button("Submit"):
         try:
+            # Ambil indeks kategori yang dipilih (misalnya, "Kategori 4" -> 4)
+            selected_category_idx = int(selected_category.split(" ")[1])
+            # Tentukan apakah pilihan pengguna benar
+            is_correct = (selected_category_idx == true_highest_category)
+            
+            # Simpan data ke Google Sheets, termasuk apakah pilihan benar atau salah
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            response_data = [timestamp, n_categories, selected_category]
+            response_data = [timestamp, n_categories, selected_category, "Benar" if is_correct else "Salah"]
             worksheet.append_row(response_data)
-            st.success(f"Respons disimpan: {selected_category}")
+            
+            # Beri feedback ke pengguna
+            if is_correct:
+                st.success(f"Respons disimpan: {selected_category}. Pilihan Anda benar!")
+            else:
+                st.error(f"Respons disimpan: {selected_category}. Pilihan Anda salah. Kategori dengan rata-rata Y tertinggi adalah Kategori {true_highest_category}.")
         except Exception as e:
             st.error(f"Gagal menyimpan: {e}")
 else:
