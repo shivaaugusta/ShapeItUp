@@ -7,7 +7,7 @@ from datetime import datetime
 
 # Inisialisasi Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = Credentials.from_service_account_file("credentials.json", scopes=scope)
+creds = Credentials.from_service_account_file(["google_sheets"],scopes=scope)
 client = gspread.authorize(creds)
 
 # Ganti dengan SPREADSHEET_ID Anda
