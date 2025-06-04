@@ -18,19 +18,19 @@ client = gspread.authorize(creds)
 worksheet = None
 try:
     spreadsheet = client.open_by_key("1aZ0LjvdZs1WHGphqb_nYrvPma8xEG9mxfM-O1_fsi3g")
-    worksheet = spreadsheet.sheet1
+    worksheet = spreadsheet.worksheet("Eksperimen_2")  # Sheet baru khusus eksperimen 2
 except Exception as e:
     st.error(f"Gagal membuka spreadsheet: {e}")
 
 # --- Jika akses sukses ---
 if worksheet is not None:
-    st.title("\U0001F3AF aEksperimen Estimasi Y Berdasarkan Bentuk")
+    st.title("\U0001F3AF Eksperimen Estimasi Y Berdasarkan Bentuk (Eksperimen 2)")
     st.info("""
     **Instruksi:** Lihat scatterplot di bawah ini. Tiap kategori direpresentasikan oleh bentuk berbeda.
     Pilih kategori (bentuk) yang memiliki rata-rata nilai Y tertinggi.
     """)
 
-    fill_style = st.radio("\U0001F3A8 Tipe Tampilan Bentuk:", ["Filled", "Unfilled"])
+    fill_style = st.radio("\U0001F3A8 Tipe Tampilan Bentuk:", ["Filled", "Unfilled", "Open"])
     n_categories = st.selectbox("\U0001F522 Jumlah Kategori", [2, 4, 6])
 
     # --- Shape Terpilih Berdasarkan Matrix ---
@@ -60,10 +60,18 @@ if worksheet is not None:
 
         for x, y in zip(x_vals, y_vals):
             img = Image.open(shape_path).convert("RGBA")
-            img_resized = img.resize((20, 20))  # Ukuran tetap, semua disamakan 40x40
+            img = img.resize((20, 20))
+
             if fill_style == "Unfilled":
-                img_resized = img_resized.convert("L")
-            im = OffsetImage(img_resized, zoom=1.0)
+                # Buat tepi lebih terlihat dengan menghapus isian
+                alpha = img.split()[3]
+                img = Image.new("RGBA", img.size, (255, 255, 255, 0))
+                img.putalpha(alpha)
+            elif fill_style == "Open":
+                img = img.convert("L")
+                img = Image.fromarray(np.stack([img] * 3, axis=-1)).convert("RGBA")
+
+            im = OffsetImage(img, zoom=0.25)
             ab = AnnotationBbox(im, (x, y), frameon=False)
             ax.add_artist(ab)
 
