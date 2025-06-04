@@ -1,115 +1,116 @@
-# --- Streamlit App Eksperimen ShapeItUp ---
+# --- Streamlit App ShapeItUp Final ---
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
-import gspread
-from google.oauth2.service_account import Credentials
-from datetime import datetime
-import os
 from PIL import Image
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from datetime import datetime
+import random
+import os
+import gspread
+from google.oauth2.service_account import Credentials
 
-# --- Inisialisasi Google Sheets ---
+# --- Autentikasi Google Sheets ---
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = Credentials.from_service_account_info(st.secrets["google_sheets"], scopes=scope)
 client = gspread.authorize(creds)
+worksheet = client.open_by_key("1aZ0LjvdZs1WHGphqb_nYrvPma8xEG9mxfM-O1_fsi3g").sheet1
 
-# --- Akses Google Sheet ---
-worksheet = None
-try:
-    spreadsheet = client.open_by_key("1aZ0LjvdZs1WHGphqb_nYrvPma8xEG9mxfM-O1_fsi3g")
-    worksheet = spreadsheet.worksheet("Eksperimen_2")  # Sheet baru khusus eksperimen 2
-except Exception as e:
-    st.error(f"Gagal membuka spreadsheet: {e}")
+# --- Konfigurasi Shape Pool ---
+SHAPE_FOLDER = "shapes"
+SHAPE_POOL = sorted([f for f in os.listdir(SHAPE_FOLDER) if f.endswith(".png")])
+SHAPE_CATEGORIES = {
+    "filled": [s for s in SHAPE_POOL if "filled" in s],
+    "unfilled": [s for s in SHAPE_POOL if "unfilled" in s],
+    "open": [s for s in SHAPE_POOL if "dash" in s or "open" in s],
+}
 
-# --- Jika akses sukses ---
-if worksheet is not None:
-    st.title("\U0001F3AF qEksperimen Estimasi Y Berdasarkan Bentuk (Eksperimen 2)")
-    st.info("""
-    **Instruksi:** Lihat scatterplot di bawah ini. Tiap kategori direpresentasikan oleh bentuk berbeda.
-    Pilih kategori (bentuk) yang memiliki rata-rata nilai Y tertinggi.
-    """)
+# --- Inisialisasi session state ---
+if "task_index" not in st.session_state:
+    st.session_state.task_index = 0
+    st.session_state.total_tasks = 53  # 3 latihan + 50 eksperimen
+    st.session_state.correct = 0
+    st.session_state.mode = "latihan"
 
-    fill_style = st.radio("\U0001F3A8 Tipe Tampilan Bentuk:", ["Filled", "Unfilled", "Open"])
-    n_categories = st.selectbox("\U0001F522 Jumlah Kategori", [2, 4, 6])
+st.title("🎯 Eksperimen ShapeItUp: Estimasi Rata-rata Y")
 
-    # --- Shape Terpilih Berdasarkan Matrix ---
-    shape_images = {
-        "arrow-dash.png": "Arrow Dash",
-        "arrow-filled.png": "Arrow Filled",
-        "cross-filled.png": "Cross Filled",
-        "pentagon-dash.png": "Pentagon Dash",
-        "triangle-dash.png": "Triangle Dash",
-        "triangle-filled.png": "Triangle Filled"
-    }
-    selected_shape_keys = list(shape_images.keys())[:n_categories]
-
-    # --- Simpan data scatter
-    if "data_initialized" not in st.session_state or st.session_state.n_categories != n_categories:
-        st.session_state.n_categories = n_categories
-        st.session_state.x_data = [np.random.uniform(0, 1.5, 15) for _ in range(n_categories)]
-        st.session_state.y_data = [np.random.uniform(0, 1.5, 15) for _ in range(n_categories)]
-        st.session_state.data_initialized = True
-
-    # --- Plot dengan gambar PNG sebagai marker ---
-    fig, ax = plt.subplots()
-    for i in range(n_categories):
-        x_vals = st.session_state.x_data[i]
-        y_vals = st.session_state.y_data[i]
-        shape_path = os.path.join("shapes", selected_shape_keys[i])
-
-        for x, y in zip(x_vals, y_vals):
-            img = Image.open(shape_path).convert("RGBA")
-            img = img.resize((20, 20))
-
-            if fill_style == "Unfilled":
-                # Buat tepi lebih terlihat dengan menghapus isian
-                alpha = img.split()[3]
-                img = Image.new("RGBA", img.size, (255, 255, 255, 0))
-                img.putalpha(alpha)
-            elif fill_style == "Open":
-                img = img.convert("L")
-                img = Image.fromarray(np.stack([img] * 3, axis=-1)).convert("RGBA")
-
-            im = OffsetImage(img, zoom=0.25)
-            ab = AnnotationBbox(im, (x, y), frameon=False)
-            ax.add_artist(ab)
-
-        ax.scatter([], [], label=shape_images[selected_shape_keys[i]])  # dummy legend
-
-    ax.set_xlim(-0.1, 1.6)
-    ax.set_ylim(-0.1, 1.6)
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.legend()
-    ax.grid(True)
-    st.pyplot(fig)
-
-    # --- Pilihan dan Evaluasi ---
-    selected_category = st.selectbox("\U0001F4CC Pilih kategori dengan rata-rata Y tertinggi:",
-                                     [f"Kategori {i+1}" for i in range(n_categories)])
-
-    if st.button("\U0001F680 Submit Jawaban"):
-        y_means = [np.mean(y) for y in st.session_state.y_data]
-        true_idx = int(np.argmax(y_means)) + 1
-        selected_idx = int(selected_category.split(" ")[1])
-        is_correct = (selected_idx == true_idx)
-
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        response = [timestamp, n_categories, selected_category, "Benar" if is_correct else "Salah",
-                    f"Kategori {true_idx}", ", ".join(f"{m:.3f}" for m in y_means), fill_style]
-
-        try:
-            worksheet.append_row(response)
-            if is_correct:
-                st.success(f"\u2705 Jawaban Anda benar! Kategori {true_idx} yang tertinggi.")
-            else:
-                st.error(f"\u274C Jawaban salah. Nilai Y tertinggi ada di kategori {true_idx}.")
-        except Exception as e:
-            st.error(f"Gagal simpan ke spreadsheet: {e}")
-
-        with st.expander("\U0001F50D Rata-rata Y per kategori"):
-            for i, mean in enumerate(y_means):
-                st.write(f"Kategori {i+1}: {mean:.3f}")
+if st.session_state.task_index < 3:
+    st.subheader(f"Tugas Latihan #{st.session_state.task_index + 1}")
 else:
-    st.error("Aplikasi tidak dapat melanjutkan karena gagal akses Google Sheets.")
+    if st.session_state.task_index == 3:
+        st.session_state.mode = "eksperimen"
+    st.subheader(f"Tugas Eksperimen #{st.session_state.task_index - 2} dari 50")
+
+# --- Konfigurasi jumlah kategori dan shape secara acak ---
+N = random.choice(range(2, 11))
+x_data = [np.random.uniform(0, 1.5, 20) for _ in range(N)]
+y_data = [np.random.uniform(0, 1.5, 20) for _ in range(N)]
+
+# --- Ambil acak bentuk dari kombinasi kategori shape ---
+shape_types = ["filled", "unfilled", "open"]
+chosen_shapes = []
+while len(chosen_shapes) < N:
+    cat = random.choice(shape_types)
+    s = random.choice(SHAPE_CATEGORIES[cat])
+    if s not in chosen_shapes:
+        chosen_shapes.append(s)
+
+# --- Plot scatter ---
+fig, ax = plt.subplots()
+for i in range(N):
+    for x, y in zip(x_data[i], y_data[i]):
+        path = os.path.join(SHAPE_FOLDER, chosen_shapes[i])
+        img = Image.open(path).convert("RGBA").resize((20, 20))
+        im = OffsetImage(img, zoom=1.0)
+        ab = AnnotationBbox(im, (x, y), frameon=False)
+        ax.add_artist(ab)
+    ax.scatter([], [], label=f"Kategori {i+1}")  # dummy legend
+
+ax.set_xlim(-0.1, 1.6)
+ax.set_ylim(-0.1, 1.6)
+ax.set_xlabel("X")
+ax.set_ylabel("Y")
+ax.legend()
+st.pyplot(fig)
+
+# --- Input jawaban peserta ---
+selected = st.selectbox("📍 Pilih kategori dengan rata-rata Y tertinggi:",
+                        [f"Kategori {i+1}" for i in range(N)])
+
+# --- Submit ---
+if st.button("🚀 Submit Jawaban"):
+    true_idx = int(np.argmax([np.mean(y) for y in y_data])) + 1
+    user_idx = int(selected.split(" ")[1])
+    benar = user_idx == true_idx
+    mode = st.session_state.mode
+
+    if benar:
+        st.session_state.correct += 1
+        st.success(f"✅ Jawaban benar! Kategori {true_idx} memiliki Y tertinggi.")
+    else:
+        st.error(f"❌ Jawaban salah. Jawaban benar: Kategori {true_idx}.")
+
+    # Tugas latihan harus dijawab benar semua
+    if mode == "latihan" and not benar:
+        st.warning("Latihan harus benar untuk lanjut.")
+        st.stop()
+
+    # Simpan ke Google Sheets
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    response = [
+        timestamp, mode, st.session_state.task_index + 1, N,
+        selected, f"Kategori {true_idx}", "Benar" if benar else "Salah",
+        ", ".join(chosen_shapes)
+    ]
+    try:
+        worksheet.append_row(response)
+    except Exception as e:
+        st.error(f"Gagal menyimpan data: {e}")
+
+    # Update indeks tugas
+    st.session_state.task_index += 1
+
+# --- Selesai eksperimen ---
+if st.session_state.task_index >= st.session_state.total_tasks:
+    st.success(f"🎉 Eksperimen selesai! Skor akhir Anda: {st.session_state.correct} dari 50.")
+    st.balloons()
