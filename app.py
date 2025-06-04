@@ -62,7 +62,8 @@ if worksheet is not None:
             img = Image.open(shape_path)
             if fill_style == "Unfilled":
                 img = img.convert("L")  # buat grayscale biar kesan hollow
-            im = OffsetImage(img, zoom=0.2)
+            img.thumbnail((32, 32))  # Resize gambar biar kecil
+            im = OffsetImage(img, zoom=1.0)
             ab = AnnotationBbox(im, (x, y), frameon=False)
             ax.add_artist(ab)
 
