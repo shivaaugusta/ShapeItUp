@@ -7,6 +7,7 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime
 import os
 from PIL import Image
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 
 # --- Inisialisasi Google Sheets ---
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
