@@ -59,11 +59,11 @@ if worksheet is not None:
         shape_path = os.path.join("shapes", selected_shape_keys[i])
 
         for x, y in zip(x_vals, y_vals):
-            img = Image.open(shape_path)
+            img = Image.open(shape_path).convert("RGBA")
+            img_resized = img.resize((40, 40))  # Ukuran tetap, semua disamakan 40x40
             if fill_style == "Unfilled":
-                img = img.convert("L")  # buat grayscale biar kesan hollow
-            img.thumbnail((32, 32))  # Resize gambar biar kecil
-            im = OffsetImage(img, zoom=1.0)
+                img_resized = img_resized.convert("L")
+            im = OffsetImage(img_resized, zoom=1.0)
             ab = AnnotationBbox(im, (x, y), frameon=False)
             ax.add_artist(ab)
 
