@@ -1,4 +1,4 @@
-# --- Streamlit App ShapeItUp Final ---
+# --- Streamlit App ShapeItUp Final (Improved for Experiment 1) ---
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
@@ -41,19 +41,36 @@ else:
         st.session_state.mode = "eksperimen"
     st.subheader(f"Tugas Eksperimen #{st.session_state.task_index - 2} dari 50")
 
+# --- Pilih jenis kombinasi shape ---
+shape_types = ["filled", "unfilled", "open"]
+combo_type = random.choice(["single", "double", "triple"])
+if combo_type == "single":
+    selected_types = [random.choice(shape_types)]
+elif combo_type == "double":
+    selected_types = random.sample(shape_types, 2)
+else:
+    selected_types = shape_types
+
+# Gabungkan shape pool dari tipe terpilih
+selected_pool = []
+for stype in selected_types:
+    selected_pool.extend(SHAPE_CATEGORIES[stype])
+random.shuffle(selected_pool)
+
 # --- Konfigurasi jumlah kategori dan shape secara acak ---
 N = random.choice(range(2, 11))
-x_data = [np.random.uniform(0, 1.5, 20) for _ in range(N)]
-y_data = [np.random.uniform(0, 1.5, 20) for _ in range(N)]
-
-# --- Ambil acak bentuk dari kombinasi kategori shape ---
-shape_types = ["filled", "unfilled", "open"]
 chosen_shapes = []
 while len(chosen_shapes) < N:
-    cat = random.choice(shape_types)
-    s = random.choice(SHAPE_CATEGORIES[cat])
+    s = random.choice(selected_pool)
     if s not in chosen_shapes:
         chosen_shapes.append(s)
+
+# --- Pastikan perbedaan Y antar kategori sesuai paper ---
+means = np.random.uniform(0.2, 1.0, N)
+target_idx = np.random.randint(N)
+means[target_idx] += 0.25  # tambahkan selisih Y ke kategori target
+y_data = [np.random.normal(loc=m, scale=0.05, size=20) for m in means]
+x_data = [np.random.uniform(0.0, 1.5, 20) for _ in range(N)]
 
 # --- Plot scatter ---
 fig, ax = plt.subplots()
@@ -90,7 +107,6 @@ if st.button("🚀 Submit Jawaban"):
     else:
         st.error(f"❌ Jawaban salah. Jawaban benar: Kategori {true_idx}.")
 
-    # Tugas latihan harus dijawab benar semua
     if mode == "latihan" and not benar:
         st.warning("Latihan harus benar untuk lanjut.")
         st.stop()
@@ -100,7 +116,7 @@ if st.button("🚀 Submit Jawaban"):
     response = [
         timestamp, mode, st.session_state.task_index + 1, N,
         selected, f"Kategori {true_idx}", "Benar" if benar else "Salah",
-        ", ".join(chosen_shapes)
+        ", ".join(chosen_shapes), combo_type
     ]
     try:
         worksheet.append_row(response)
