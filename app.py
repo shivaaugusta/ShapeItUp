@@ -60,7 +60,7 @@ if worksheet is not None:
 
         for x, y in zip(x_vals, y_vals):
             img = Image.open(shape_path).convert("RGBA")
-            img_resized = img.resize((40, 40))  # Ukuran tetap, semua disamakan 40x40
+            img_resized = img.resize((20, 20))  # Ukuran tetap, semua disamakan 40x40
             if fill_style == "Unfilled":
                 img_resized = img_resized.convert("L")
             im = OffsetImage(img_resized, zoom=1.0)
