@@ -24,7 +24,7 @@ except Exception as e:
 
 # --- Jika akses sukses ---
 if worksheet is not None:
-    st.title("\U0001F3AF Eksperimen Estimasi Y Berdasarkan Bentuk")
+    st.title("\U0001F3AF aEksperimen Estimasi Y Berdasarkan Bentuk")
     st.info("""
     **Instruksi:** Lihat scatterplot di bawah ini. Tiap kategori direpresentasikan oleh bentuk berbeda.
     Pilih kategori (bentuk) yang memiliki rata-rata nilai Y tertinggi.
