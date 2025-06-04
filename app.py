@@ -59,7 +59,7 @@ if worksheet is not None:
 
         for x, y in zip(x_vals, y_vals):
             img = Image.open(shape_path).convert("RGBA")
-            img = img.resize((20, 20))
+            img = img.resize((40, 40))
             im = OffsetImage(img, zoom=0.25)
             ab = AnnotationBbox(im, (x, y), frameon=False)
             ax.add_artist(ab)
