@@ -1,4 +1,4 @@
-# --- Streamlit App Eksperimen ShapeItUp (Tanpa toggle Filled/Unfilled/Open) ---
+# --- Streamlit App Experiment 2 ---
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
